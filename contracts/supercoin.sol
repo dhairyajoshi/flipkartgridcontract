@@ -41,23 +41,29 @@ contract SuperToken is ERC20{
 
         _mint(to, amount);
         tokenBalance[to].totalTokens+=newTokens.amount;
-        tokenHistory[to].totalEarning+=newTokens.amount;
         tokenBalance[to].tokenDetails.push(newTokens);
-        tokenHistory[to].earningHistory.push(newTokens);
-        totalTokensIssued+=amount;
 
+        tokenHistory[to].totalEarning+=newTokens.amount;
+        tokenHistory[to].earningHistory.push(newTokens);
+
+        totalTokensIssued+=amount;
     }
 
 
     function transferFrom(address from, address to, uint256 amount) public override returns(bool){
 
         require(tokenBalance[from].totalTokens>=amount,"Not Enough tokens!");
+
         TokenData memory newTokens= TokenData(amount,block.timestamp,block.timestamp+expiryTime,from);
+
         tokenBalance[from].totalTokens-=amount;
         tokenBalance[to].totalTokens+=amount;
+
         tokenHistory[to].totalEarning+=newTokens.amount;
         tokenHistory[to].earningHistory.push(newTokens);
+
         uint256 transact = amount;
+        
         for(uint256 i=0;i<tokenBalance[from].tokenDetails.length && amount>0;i++){
             if(tokenBalance[from].tokenDetails[i].amount>0){
                 if(tokenBalance[from].tokenDetails[i].amount>=amount){
@@ -80,15 +86,20 @@ contract SuperToken is ERC20{
 
     function expireTokens(address user) public{
         uint expiredTokens=0;
+
         for(uint i=0;i<tokenBalance[user].tokenDetails.length;i++){
             if(tokenBalance[user].tokenDetails[i].expiryDate<block.timestamp && tokenBalance[user].tokenDetails[i].amount>0){
                 expiredTokens+=tokenBalance[user].tokenDetails[i].amount;
                 tokenBalance[user].tokenDetails[i].amount=0;
             }
         }
-        _burn(user, expiredTokens);
+        
         tokenBalance[user].totalTokens-=expiredTokens;
+        
         totalTokensIssued-=expiredTokens;
+
+        _burn(user, expiredTokens);
+        
     }
 
     function viewTokens(address user) public view returns(uint256){
